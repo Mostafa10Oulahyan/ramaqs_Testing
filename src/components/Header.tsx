@@ -3,9 +3,11 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { searchShows, setSearchQuery } from '../store/slices/showsListSlice';
 import customLogo from '../assets/logo.png';
+import { Menu, X } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [localSearch, setLocalSearch] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -19,8 +21,7 @@ const Header: React.FC = () => {
         dispatch(setSearchQuery(localSearch));
         dispatch(searchShows(localSearch));
         
-        // Only force redirect to Home if we are deep in a secondary page (like Celebs/About/Watchlist/Details)
-        // If we are already on Home (/) or Movies (/movies), stay there and let the local view render results.
+        // Only force redirect to Home if we are deep in a secondary page
         if (location.pathname !== '/' && location.pathname !== '/movies') {
           navigate('/');
         }
@@ -36,23 +37,29 @@ const Header: React.FC = () => {
     e.preventDefault();
   };
 
+  const closeMenuAndNavigate = (path: string) => {
+    setMenuOpen(false);
+    navigate(path);
+  };
+
   return (
     <header className="bg-[#121212] text-white sticky top-0 z-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-14 md:h-16 items-center w-full gap-4 lg:gap-8">
+        <div className="flex h-14 md:h-16 items-center w-full justify-between lg:gap-8">
 
-          {/* Logo & Links Left Side */}
-          <div className="flex items-center gap-4 lg:gap-6 shrink-0 rounded-lg" >
+          {/* Logo */}
+          <div className="flex items-center gap-4 lg:gap-6 shrink-0 rounded-lg">
             <Link
               to="/"
-              onClick={() => { dispatch(setSearchQuery('')); setLocalSearch(''); }}
+              onClick={() => { dispatch(setSearchQuery('')); setLocalSearch(''); setMenuOpen(false); }}
               className="bg-[#121212] rounded-[4px] px-1.5 py-0.5 flex items-center justify-center min-w-[64px] h-[32px] md:min-w-[70px] md:h-[35px] hover:brightness-110 transition-all shrink-0"
             >
               <img src={customLogo} alt="Logo" className="h-full w-full object-contain" />
             </Link>
 
-            <nav className="hidden md:flex space-x-6 text-sm font-bold text-white">
-              <span
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex space-x-6 text-sm font-bold text-white whitespace-nowrap">
+               <span
                 onClick={() => { dispatch(setSearchQuery('')); navigate('/movies'); }}
                 className="cursor-pointer hover:bg-zinc-800 px-3 py-1.5 rounded-sm transition-colors"
               >
@@ -62,7 +69,19 @@ const Header: React.FC = () => {
                 onClick={() => { dispatch(setSearchQuery('')); navigate('/'); }}
                 className="cursor-pointer hover:bg-zinc-800 px-3 py-1.5 rounded-sm transition-colors"
               >
-                TV shows
+                TV Shows
+              </span>
+              <span
+                onClick={() => navigate('/top-movies')}
+                className="cursor-pointer text-[#f5c518] hover:bg-zinc-800 px-3 py-1.5 rounded-sm transition-colors"
+              >
+                Top 100 Movies
+              </span>
+              <span
+                onClick={() => navigate('/top-shows')}
+                className="cursor-pointer text-[#f5c518] hover:bg-zinc-800 px-3 py-1.5 rounded-sm transition-colors"
+              >
+                Top 100 Shows
               </span>
               <span
                 onClick={() => navigate('/celebs')}
@@ -73,8 +92,8 @@ const Header: React.FC = () => {
             </nav>
           </div>
 
-          {/* Search Bar - Flex Grow Middle (Hidden on Mobile) */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-grow justify-center w-full min-w-0 max-w-2xl px-4">
+          {/* Desktop Search Bar */}
+          <form onSubmit={handleSearch} className="hidden lg:flex flex-grow justify-center w-full min-w-0 max-w-lg px-4">
             <div className="relative w-full text-black flex items-center bg-white rounded-[4px] overflow-hidden focus-within:ring-2 focus-within:ring-[#f5c518] focus-within:ring-inset h-[34px]">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 text-zinc-500">
@@ -91,23 +110,13 @@ const Header: React.FC = () => {
             </div>
           </form>
 
-          {/* Right Links */}
-          <div className="flex items-center gap-3 sm:gap-4 text-sm font-bold shrink-0 ml-auto">
-            {/* Mobile Only Search Trigger Box */}
-            <button
-              className="md:hidden w-8 h-8 rounded-[4px] bg-white flex items-center justify-center text-zinc-600 hover:bg-zinc-200 transition-colors"
-              onClick={() => alert('Search interaction triggered!')}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[18px] h-[18px]">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-            </button>
-
+          {/* Desktop Right Links */}
+          <div className="hidden md:flex items-center gap-3 sm:gap-4 text-sm font-bold shrink-0 ml-auto">
             <Link to="/about" className="hover:bg-zinc-800 px-2 sm:px-3 py-1.5 rounded-sm cursor-pointer transition-colors text-white whitespace-nowrap">
               <span>About</span>
             </Link>
 
-            <div className="hidden sm:block w-[1px] h-6 bg-zinc-700 mx-0 sm:mx-1"></div>
+            <div className="w-[1px] h-6 bg-zinc-700 mx-1"></div>
 
             <Link to="/watchlist" className="flex items-center gap-2 hover:bg-zinc-800 px-2 sm:px-3 py-1.5 rounded-sm cursor-pointer transition-colors text-white">
               <div className="relative flex items-center justify-center">
@@ -120,11 +129,91 @@ const Header: React.FC = () => {
                   </span>
                 )}
               </div>
-              <span className="hidden lg:inline">Watchlist</span>
+              <span>Watchlist</span>
             </Link>
           </div>
+
+          {/* Mobile Hamburger Menu Trigger */}
+          <button 
+            className="md:hidden text-white flex items-center justify-center w-10 h-10 -mr-2"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Dropdown Menu Form elements */}
+      {menuOpen && (
+        <div className="md:hidden bg-[#1f1f1f] border-t border-zinc-800 absolute w-full left-0 z-40 p-4 shadow-xl flex flex-col gap-4">
+           <form onSubmit={handleSearch} className="w-full">
+            <div className="relative w-full text-black flex items-center bg-white rounded-[4px] overflow-hidden focus-within:ring-2 focus-within:ring-[#f5c518] h-[40px]">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 text-zinc-500">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full bg-transparent font-medium pl-10 pr-4 focus:outline-none placeholder:text-zinc-500"
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+              />
+            </div>
+          </form>
+
+          <nav className="flex flex-col text-lg font-bold gap-1 text-white">
+            <button
+              onClick={() => { dispatch(setSearchQuery('')); closeMenuAndNavigate('/movies'); }}
+              className="text-left py-3 px-2 rounded hover:bg-zinc-800 transition-colors"
+            >
+              Movies
+            </button>
+            <button
+              onClick={() => { dispatch(setSearchQuery('')); closeMenuAndNavigate('/'); }}
+              className="text-left py-3 px-2 rounded hover:bg-zinc-800 transition-colors border-t border-zinc-800/50"
+            >
+              TV Shows
+            </button>
+            <button
+              onClick={() => closeMenuAndNavigate('/top-movies')}
+              className="text-left py-3 px-2 rounded hover:bg-zinc-800 transition-colors border-t border-zinc-800/50 text-[#f5c518]"
+            >
+              Top 100 Movies
+            </button>
+            <button
+              onClick={() => closeMenuAndNavigate('/top-shows')}
+              className="text-left py-3 px-2 rounded hover:bg-zinc-800 transition-colors border-t border-zinc-800/50 text-[#f5c518]"
+            >
+              Top 100 TV Shows
+            </button>
+            <button
+              onClick={() => closeMenuAndNavigate('/celebs')}
+              className="text-left py-3 px-2 rounded hover:bg-zinc-800 transition-colors border-t border-zinc-800/50"
+            >
+              Celebs
+            </button>
+            <button
+              onClick={() => closeMenuAndNavigate('/watchlist')}
+              className="text-left py-3 px-2 rounded hover:bg-zinc-800 transition-colors border-t border-zinc-800/50 flex justify-between items-center"
+            >
+              Watchlist
+              {watchlistCount > 0 && (
+                <span className="bg-[#f5c518] text-black text-xs font-extrabold px-2 py-0.5 rounded-full">
+                  {watchlistCount}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => closeMenuAndNavigate('/about')}
+              className="text-left py-3 px-2 rounded hover:bg-zinc-800 transition-colors border-t border-zinc-800/50"
+            >
+              About
+            </button>
+          </nav>
+        </div>
+      )}
     </header>
   );
 };

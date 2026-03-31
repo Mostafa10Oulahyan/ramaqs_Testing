@@ -16,7 +16,11 @@ const ShowCard: React.FC<ShowCardProps> = ({ show }) => {
   const inWatchlist = watchlist.some(item => item.id === show.id);
 
   const handleCardClick = () => {
-    navigate(`/show/${show.id}`);
+    if (show.isMovie) {
+      navigate(`/movie/${show.id}`);
+    } else {
+      navigate(`/show/${show.id}`);
+    }
   };
 
   const handleWatchlistClick = (e: React.MouseEvent) => {
@@ -67,7 +71,7 @@ const ShowCard: React.FC<ShowCardProps> = ({ show }) => {
         {/* Star Rating & Context */}
         <div className="flex items-center gap-1 text-zinc-400 text-sm mb-1 mt-auto shrink-0">
           <span className="text-[#f5c518] text-base">★</span> 
-          <span className="mt-0.5">{show.rating?.average || 'N/A'}</span>
+          <span className="mt-0.5">{typeof show.rating?.average === 'number' ? show.rating.average.toFixed(2) : 'N/A'}</span>
           <span className="ml-auto text-blue-500 hover:text-white transition-colors cursor-pointer group/rate">
              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 hidden group-hover/rate:inline">
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-1.81.168l1.325 5.042c.11.42-.358.761-.722.548l-4.944-2.888a.563.563 0 00-.546 0l-4.944 2.888c-.364.213-.832-.128-.722-.548l1.325-5.042a.563.563 0 00-1.81-.168l-4.204-3.602c-.38-.325-.178-.948.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />

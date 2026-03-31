@@ -5,6 +5,7 @@ import { fetchShowDetails } from '../store/slices/tvShowSlice';
 import Header from '../components/Header';
 import ShowDetails from '../components/ShowDetails';
 import EpisodeList from '../components/EpisodeList';
+import CastList from '../components/CastList';
 import Loader from '../components/Loader';
 import { ArrowLeft } from 'lucide-react';
 
@@ -13,12 +14,12 @@ const ShowView: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   
-  const { show, episodes, status, error } = useAppSelector((state) => state.tvShow);
+  const { show, episodes, cast, status, error } = useAppSelector((state) => state.tvShow);
 
   useEffect(() => {
     if (id) {
       dispatch(fetchShowDetails(id));
-      window.scrollTo(0,0);
+      window.scrollTo(0, 0);
     }
   }, [id, dispatch]);
 
@@ -26,7 +27,7 @@ const ShowView: React.FC = () => {
 
   if (status === 'loading') {
     content = (
-      <div className="flex justify-center items-center h-[60vh] bg-black">
+      <div className="flex justify-center flex-col items-center h-[60vh] bg-black">
         <Loader />
       </div>
     );
@@ -34,6 +35,7 @@ const ShowView: React.FC = () => {
     content = (
       <div className="w-full bg-black">
         <ShowDetails show={show} />
+        {cast && cast.length > 0 && <CastList cast={cast} source="tvmaze" />}
         <EpisodeList episodes={episodes} />
       </div>
     );

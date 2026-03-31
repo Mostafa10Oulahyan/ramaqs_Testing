@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, MapPin, Calendar, User } from 'lucide-react';
 import Header from '../components/Header';
 import Loader from '../components/Loader';
@@ -16,6 +16,9 @@ interface CastCredit {
 const CelebDetailsView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const source = params.get('source');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,26 +31,88 @@ const CelebDetailsView: React.FC = () => {
     const fetchCelebData = async () => {
       try {
         setLoading(true);
-        // 1. Fetch Person Details
-        const personRes = await fetch(`https://api.tvmaze.com/people/${id}`);
-        if (!personRes.ok) throw new Error('Person not found');
-        const personData = await personRes.json();
-        setPerson(personData);
+        if (source === 'tmdb') {
+          // 1. Fetch Person Details from TMDB
+          const personRes = await fetch(`https://api.themoviedb.org/3/person/${id}?api_key=3fd2be6f0c70a2a598f084ddfb75487c`);
+          if (!personRes.ok) throw new Error('Person not found');
+          const data = await personRes.json();
+          setPerson({
+            id: data.id,
+            name: data.name,
+            url: '',
+            image: {
+              medium: data.profile_path ? `https://image.tmdb.org/t/p/w185${data.profile_path}` : '',
+              original: data.profile_path ? `https://image.tmdb.org/t/p/original${data.profile_path}` : ''
+            },
+            country: data.place_of_birth ? { name: data.place_of_birth, code: '', timezone: '' } : undefined,
+            birthday: data.birthday,
+            deathday: data.deathday || undefined,
+            gender: data.gender === 1 ? 'Female' : (data.gender === 2 ? 'Male' : '')
+          });
 
-        // 2. Fetch Cast Credits (His Works)
-        const worksRes = await fetch(`https://api.tvmaze.com/people/${id}/castcredits?embed=show`);
-        if (!worksRes.ok) throw new Error('Failed to fetch works');
-        const worksData: CastCredit[] = await worksRes.json();
-        
-        // Extract embedded shows and filter duplicates/nulls
-        const uniqueShows = new Map<number, Show>();
-        worksData.forEach(credit => {
-          if (credit._embedded && credit._embedded.show) {
-             uniqueShows.set(credit._embedded.show.id, credit._embedded.show);
-          }
-        });
-        
-        setCredits(Array.from(uniqueShows.values()));
+          // 2. Fetch TMDB Movie Credits
+          const creditsRes = await fetch(`https://api.themoviedb.org/3/person/${id}/movie_credits?api_key=3fd2be6f0c70a2a598f084ddfb75487c`);
+          if (!creditsRes.ok) throw new Error('Failed to fetch works');
+          const creditsData = await creditsRes.json();
+          const movies = creditsData.cast || [];
+          const uniqueShows = new Map<number, Show>();
+          movies.forEach((m: any) => {
+             if (m.vote_average && m.vote_average > 0) {
+                uniqueShows.set(m.id, {
+                  id: m.id,
+                  url: '',
+                  name: m.title,
+                  type: 'Movie',
+                  language: m.original_language,
+                  genres: ['Movie'],
+                  status: 'Released',
+                  runtime: 0,
+                  premiered: m.release_date || '',
+                  ended: '',
+                  officialSite: null,
+                  schedule: { time: '', days: [] },
+                  rating: { average: m.vote_average },
+                  weight: 0,
+                  network: null,
+                  webChannel: null,
+                  externals: { tvrage: 0, thetvdb: 0, powerpuffgirls: '' },
+                  image: { 
+                    medium: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : '', 
+                    original: m.poster_path ? `https://image.tmdb.org/t/p/original${m.poster_path}` : '' 
+                  },
+                  summary: m.overview,
+                  updated: 0,
+                  _links: { self: { href: '' }, previousepisode: { href: '' } },
+                  isMovie: true,
+                });
+             }
+          });
+          setCredits(Array.from(uniqueShows.values()));
+        } else {
+          // 1. Fetch Person Details from TVMaze
+          const personRes = await fetch(`https://api.tvmaze.com/people/${id}`);
+          if (!personRes.ok) throw new Error('Person not found');
+          const personData = await personRes.json();
+          setPerson(personData);
+  
+          // 2. Fetch Cast Credits (His Works)
+          const worksRes = await fetch(`https://api.tvmaze.com/people/${id}/castcredits?embed=show`);
+          if (!worksRes.ok) throw new Error('Failed to fetch works');
+          const worksData: CastCredit[] = await worksRes.json();
+          
+          // Extract embedded shows and filter duplicates/nulls
+          const uniqueShows = new Map<number, Show>();
+          worksData.forEach(credit => {
+            if (credit._embedded && credit._embedded.show) {
+               const sh = credit._embedded.show;
+               if (sh.rating && sh.rating.average && sh.rating.average > 0) {
+                 uniqueShows.set(sh.id, sh);
+               }
+            }
+          });
+          
+          setCredits(Array.from(uniqueShows.values()));
+        }
       } catch (err: any) {
         setError(err.message || 'An error occurred.');
       } finally {

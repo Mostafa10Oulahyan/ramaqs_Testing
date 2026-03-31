@@ -20,11 +20,41 @@ const MoviesView: React.FC = () => {
     const fetchMovies = async () => {
       try {
         setLoading(true);
-        // We fetch page 2 for our isolated 'Movies' list
-        const res = await fetch('https://api.tvmaze.com/shows?page=2');
+        // Using TMDB for movies, mapping to our TV Show interface
+        const res = await fetch('https://api.themoviedb.org/3/movie/popular?api_key=3fd2be6f0c70a2a598f084ddfb75487c&page=1');
         if (!res.ok) throw new Error('Failed to fetch movies data');
         const data = await res.json();
-        setMovies(data);
+        
+        const mappedMovies: Show[] = data.results
+          .filter((m: any) => m.vote_average && m.vote_average > 0)
+          .map((m: any) => ({
+            id: m.id,
+            url: '',
+            name: m.title,
+            type: 'Movie',
+            language: m.original_language,
+            genres: ['Movie'],
+            status: 'Released',
+            runtime: 0,
+            premiered: m.release_date,
+            ended: '',
+            officialSite: null,
+            schedule: { time: '', days: [] },
+            rating: { average: m.vote_average },
+            weight: 0,
+            network: null,
+            webChannel: null,
+            externals: { tvrage: 0, thetvdb: 0, powerpuffgirls: '' },
+            image: { 
+              medium: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : '', 
+              original: m.poster_path ? `https://image.tmdb.org/t/p/original${m.poster_path}` : '' 
+            },
+            summary: m.overview,
+            updated: 0,
+            _links: { self: { href: '' }, previousepisode: { href: '' } },
+            isMovie: true,
+          }));
+        setMovies(mappedMovies);
       } catch (err: any) {
         setError(err.message || 'An error occurred');
       } finally {
@@ -36,7 +66,9 @@ const MoviesView: React.FC = () => {
   }, []);
 
   const isSearching = !!searchQuery;
-  const activeShows = isSearching ? searchResults : movies;
+  const activeShows = isSearching 
+    ? searchResults.filter(s => s.isMovie && s.rating?.average) 
+    : movies;
   const displayLoading = isSearching ? searchStatus === 'loading' : loading;
 
   return (
@@ -78,7 +110,10 @@ const MoviesView: React.FC = () => {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6 pb-20">
             {activeShows.map((movie: Show) => (
-              <ShowCard key={movie.id} show={movie} />
+              // Add a prefix to TMDB ids if mixed, but since they are mapped and isolated, we just pass the object
+              <div key={`${movie.isMovie ? 'm-' : ''}${movie.id}`}>
+                <ShowCard show={movie} />
+              </div>
             ))}
           </div>
         )}

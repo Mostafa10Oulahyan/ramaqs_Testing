@@ -34,7 +34,7 @@ export const fetchShowsPage = createAsyncThunk(
       throw new Error('Failed to fetch shows');
     }
     const data = await response.json();
-    return data as Show[];
+    return (data as Show[]).filter(show => show.rating && show.rating.average && show.rating.average > 0);
   }
 );
 
@@ -44,14 +44,59 @@ export const searchShows = createAsyncThunk(
   async (query: string) => {
     if (!query.trim()) return [];
     
-    const response = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`);
-    if (!response.ok) {
+    try {
+      // Fetch from TVMaze
+      const tvMazeRes = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`);
+      const tvMazeData = await tvMazeRes.json();
+      const tvShows = tvMazeData
+        .map((item: any) => item.show)
+        .filter((show: Show) => show.rating && show.rating.average && show.rating.average > 0) as Show[];
+
+      // Fetch from TMDB
+      let tmdbMovies: Show[] = [];
+      try {
+        const tmdbRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=3fd2be6f0c70a2a598f084ddfb75487c&query=${encodeURIComponent(query)}`);
+        const tmdbData = await tmdbRes.json();
+        if (tmdbData.results) {
+          tmdbMovies = tmdbData.results
+            .filter((m: any) => m.vote_average && m.vote_average > 0)
+            .map((m: any) => ({
+              id: m.id,
+              url: '',
+              name: m.title,
+              type: 'Movie',
+              language: m.original_language,
+              genres: ['Movie'],
+              status: 'Released',
+              runtime: 0,
+              premiered: m.release_date || '',
+              ended: '',
+              officialSite: null,
+              schedule: { time: '', days: [] },
+              rating: { average: m.vote_average },
+              weight: 0,
+              network: null,
+              webChannel: null,
+              externals: { tvrage: 0, thetvdb: 0, powerpuffgirls: '' },
+              image: { 
+                medium: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : '', 
+                original: m.poster_path ? `https://image.tmdb.org/t/p/original${m.poster_path}` : '' 
+              },
+              summary: m.overview,
+              updated: 0,
+              _links: { self: { href: '' }, previousepisode: { href: '' } },
+              isMovie: true,
+            }));
+        }
+      } catch (err) {
+        console.error('Failed to fetch from TMDB:', err);
+      }
+
+      // Combine results
+      return [...tvShows, ...tmdbMovies];
+    } catch (err) {
       throw new Error('Failed to search shows');
     }
-    const data = await response.json();
-    // TV Maze /search/shows returns an array of { score: number, show: Show }
-    // We map it to just return the Show array to match our standard list.
-    return data.map((item: any) => item.show) as Show[];
   }
 );
 

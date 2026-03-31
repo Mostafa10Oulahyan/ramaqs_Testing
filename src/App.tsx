@@ -6,6 +6,9 @@ import WatchlistView from './pages/WatchlistView';
 import CelebsView from './pages/CelebsView';
 import CelebDetailsView from './pages/CelebDetailsView';
 import MoviesView from './pages/MoviesView';
+import MovieView from './pages/MovieView';
+import TopMoviesView from './pages/TopMoviesView';
+import TopShowsView from './pages/TopShowsView';
 import About from './pages/About';
 import Footer from './components/Footer';
 
@@ -16,8 +19,11 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/show/:id" element={<ShowView />} />
+          <Route path="/movie/:id" element={<MovieView />} />
           <Route path="/episode/:id" element={<EpisodeView />} />
           <Route path="/movies" element={<MoviesView />} />
+          <Route path="/top-movies" element={<TopMoviesView />} />
+          <Route path="/top-shows" element={<TopShowsView />} />
           <Route path="/watchlist" element={<WatchlistView />} />
           <Route path="/celebs" element={<CelebsView />} />
           <Route path="/celebs/:id" element={<CelebDetailsView />} />

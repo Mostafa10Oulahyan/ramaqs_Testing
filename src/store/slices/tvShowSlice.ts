@@ -19,6 +19,19 @@ export interface Episode {
   _links: { self: { href: string } };
 }
 
+export interface CastMember {
+  person: {
+    id: number;
+    name: string;
+    image: { medium: string; original: string } | null;
+  };
+  character: {
+    id: number;
+    name: string;
+    image: { medium: string; original: string } | null;
+  };
+}
+
 export interface Show {
   id: number;
   url: string;
@@ -46,14 +59,17 @@ export interface Show {
   summary: string;
   updated: number;
   _links: { self: { href: string }; previousepisode: { href: string } };
+  isMovie?: boolean; // Used to identify TMDB movies
   _embedded?: {
-    episodes: Episode[];
+    episodes?: Episode[];
+    cast?: CastMember[];
   };
 }
 
 interface TVShowState {
   show: Show | null;
   episodes: Episode[];
+  cast: CastMember[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
@@ -61,6 +77,7 @@ interface TVShowState {
 const initialState: TVShowState = {
   show: null,
   episodes: [],
+  cast: [],
   status: 'idle',
   error: null,
 };
@@ -68,7 +85,9 @@ const initialState: TVShowState = {
 export const fetchShowDetails = createAsyncThunk(
   'tvShow/fetchShowDetails',
   async (id: string) => {
-    const response = await fetch(`https://api.tvmaze.com/shows/${id}?embed=episodes`);
+    // Note: If we use this thunk for TMDB movies in the future we'll need branching logic here, 
+    // but right now TMDB logic will likely be locally handled in MovieView or branched.
+    const response = await fetch(`https://api.tvmaze.com/shows/${id}?embed[]=episodes&embed[]=cast`);
     if (!response.ok) {
       throw new Error('Failed to fetch show data');
     }
@@ -89,8 +108,15 @@ const tvShowSlice = createSlice({
       .addCase(fetchShowDetails.fulfilled, (state, action: PayloadAction<Show>) => {
         state.status = 'succeeded';
         state.show = action.payload;
-        if (action.payload._embedded && action.payload._embedded.episodes) {
-          state.episodes = action.payload._embedded.episodes;
+        if (action.payload._embedded) {
+          if (action.payload._embedded.episodes) {
+            state.episodes = action.payload._embedded.episodes;
+          }
+          if (action.payload._embedded.cast) {
+            state.cast = action.payload._embedded.cast;
+          } else {
+            state.cast = [];
+          }
         }
       })
       .addCase(fetchShowDetails.rejected, (state, action) => {
