@@ -18,11 +18,11 @@ import darkImage from '../assets/dark.jpg';
 const slides = [
   {
     id: 1,
-    title: "Prison Break",
+    title: "Breaking Bad",
     genres: ["Action", "Adventure", "Drama"],
-    description: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-    status: "In theaters",
-    image: pbImage
+    description: "A high school chemistry teacher diagnosed with terminal lung cancer turns to manufacturing and selling methamphetamine to secure his family's financial future.",
+    status: "Ended",
+    image: bbImage
   },
   {
     id: 2,
@@ -30,7 +30,7 @@ const slides = [
     genres: ["Action", "Crime", "Drama"],
     description: "Michael Scofield deliberately gets himself imprisoned to help his brother Lincoln Burrows escape death row for a crime he didn't commit.",
     status: "Ended",
-    image: bbImage
+    image: pbImage
   },
   {
     id: 3,
