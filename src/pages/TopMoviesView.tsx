@@ -76,7 +76,7 @@ const TopMoviesView: React.FC = () => {
   return (
     <div className="flex-grow flex flex-col min-h-screen bg-black text-white">
       <Header />
-      <main className="flex-grow px-4 sm:px-6 lg:px-8 py-8 md:py-12 max-w-7xl mx-auto w-full">
+      <main className="flex-grow px-4 sm:px-6 lg:px-8 pb-8 md:pb-12 pt-20 md:pt-24 max-w-7xl mx-auto w-full">
         <h1 className="text-3xl md:text-5xl font-black mb-8 border-l-4 border-[#f5c518] pl-4 ml-[-16px]">
           Top 100 Movies
         </h1>

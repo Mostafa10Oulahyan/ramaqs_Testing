@@ -5,7 +5,11 @@ import { searchShows, setSearchQuery } from '../store/slices/showsListSlice';
 import customLogo from '../assets/logo.png';
 import { Menu, X } from 'lucide-react';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  isTransparent?: boolean;
+}
+
+const Header: React.FC<HeaderProps> = ({ isTransparent = false }) => {
   const [localSearch, setLocalSearch] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const dispatch = useAppDispatch();
@@ -15,13 +19,10 @@ const Header: React.FC = () => {
   const watchlistCount = useAppSelector(state => state.watchlist.items.length);
 
   useEffect(() => {
-    // Skip if just mounted empty
     const handler = setTimeout(() => {
       if (localSearch.trim()) {
         dispatch(setSearchQuery(localSearch));
         dispatch(searchShows(localSearch));
-        
-        // Only force redirect to Home if we are deep in a secondary page
         if (location.pathname !== '/' && location.pathname !== '/movies') {
           navigate('/');
         }
@@ -43,7 +44,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-[#121212] text-white sticky top-0 z-50 shadow-md">
+    <header className={`${isTransparent ? 'fixed bg-gradient-to-b from-black/80 via-black/40 to-transparent border-none' : 'sticky bg-[#121212] shadow-md border-b border-white/5'} top-0 left-0 w-full z-50 transition-all duration-300 text-white`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 md:h-16 items-center w-full justify-between lg:gap-8">
 
@@ -52,9 +53,9 @@ const Header: React.FC = () => {
             <Link
               to="/"
               onClick={() => { dispatch(setSearchQuery('')); setLocalSearch(''); setMenuOpen(false); }}
-              className="bg-[#121212] rounded-[4px] px-1.5 py-0.5 flex items-center justify-center min-w-[64px] h-[32px] md:min-w-[70px] md:h-[35px] hover:brightness-110 transition-all shrink-0"
+              className="bg-black/60 rounded-[4px] px-1.5 py-0.5 flex items-center justify-center min-w-[64px] h-[32px] md:min-w-[70px] md:h-[35px] backdrop-blur-sm border border-white/10 hover:bg-black/80 transition-colors"
             >
-              <img src={customLogo} alt="Logo" className="h-full w-full object-contain" />
+              <img src={customLogo} alt="Logo" className="h-full w-full object-contain opacity-90 hover:opacity-100 transition-opacity" />
             </Link>
 
             {/* Desktop Nav */}
@@ -66,7 +67,7 @@ const Header: React.FC = () => {
                 Movies
               </span>
               <span
-                onClick={() => { dispatch(setSearchQuery('')); navigate('/'); }}
+                onClick={() => { dispatch(setSearchQuery('')); navigate('/tvshows'); }}
                 className="cursor-pointer hover:bg-zinc-800 px-3 py-1.5 rounded-sm transition-colors"
               >
                 TV Shows
@@ -171,7 +172,7 @@ const Header: React.FC = () => {
               Movies
             </button>
             <button
-              onClick={() => { dispatch(setSearchQuery('')); closeMenuAndNavigate('/'); }}
+              onClick={() => { dispatch(setSearchQuery('')); closeMenuAndNavigate('/tvshows'); }}
               className="text-left py-3 px-2 rounded hover:bg-zinc-800 transition-colors border-t border-zinc-800/50"
             >
               TV Shows

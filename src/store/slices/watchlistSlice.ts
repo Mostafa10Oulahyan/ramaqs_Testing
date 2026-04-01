@@ -6,8 +6,13 @@ interface WatchlistState {
   items: Show[];
 }
 
+const loadWaitlist = (): Show[] => {
+  const saved = localStorage.getItem('powerpuff_watchlist');
+  return saved ? JSON.parse(saved) : [];
+};
+
 const initialState: WatchlistState = {
-  items: [],
+  items: loadWaitlist(),
 };
 
 const watchlistSlice = createSlice({
@@ -21,9 +26,11 @@ const watchlistSlice = createSlice({
       } else {
         state.items.push(action.payload);
       }
+      localStorage.setItem('powerpuff_watchlist', JSON.stringify(state.items));
     },
     removeFromWatchlist: (state, action: PayloadAction<number>) => {
       state.items = state.items.filter(item => item.id !== action.payload);
+      localStorage.setItem('powerpuff_watchlist', JSON.stringify(state.items));
     }
   },
 });

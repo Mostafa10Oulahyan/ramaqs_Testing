@@ -2,9 +2,9 @@ import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchShowsPage, setPage, setSelectedGenre } from '../store/slices/showsListSlice';
 import Header from '../components/Header';
-import ShowDetails from '../components/ShowDetails';
 import ShowCard from '../components/ShowCard';
 import Loader from '../components/Loader';
+import HeroCarousel from '../components/HeroCarousel';
 
 const Home: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -27,19 +27,16 @@ const Home: React.FC = () => {
     ? activeShows 
     : activeShows.filter(show => show.genres?.includes(selectedGenre));
 
-  // The first show becomes our hero if we aren't searching
-  const heroShow = !searchQuery && filteredShows.length > 0 ? filteredShows[0] : null;
-
   // The grid display
-  const gridShows = heroShow ? filteredShows.slice(1) : filteredShows;
+  const gridShows = filteredShows;
 
   return (
     <div className="min-h-screen bg-black w-full text-white">
-      <Header />
+      <Header isTransparent={!searchQuery} />
       
       {/* Hero Banner only when not searching */}
-      {!searchQuery && heroShow && (
-        <ShowDetails show={heroShow} />
+      {!searchQuery && (
+        <HeroCarousel />
       )}
 
       {status === 'loading' ? (

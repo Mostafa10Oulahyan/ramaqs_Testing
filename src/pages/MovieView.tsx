@@ -118,11 +118,11 @@ const MovieView: React.FC = () => {
   return (
     <div className="min-h-screen bg-black w-full text-white">
       <Header />
-      <main className="w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 md:mt-8">
+      <main className="w-full relative">
+        <div className="absolute top-16 md:top-20 left-4 sm:left-6 lg:left-8 z-50 pointer-events-auto">
           <button 
             onClick={() => navigate(-1)} 
-            className="flex items-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition px-3 py-1.5 rounded-sm w-fit -ml-3 mb-2"
+            className="flex items-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition px-3 py-1.5 rounded-sm bg-black/40 backdrop-blur-sm"
           >
             <ArrowLeft className="w-4 h-4 mr-1 stroke-[3]" /> Go Back
           </button>

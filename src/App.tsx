@@ -9,8 +9,10 @@ import MoviesView from './pages/MoviesView';
 import MovieView from './pages/MovieView';
 import TopMoviesView from './pages/TopMoviesView';
 import TopShowsView from './pages/TopShowsView';
+import TvShowsView from './pages/TvShowsView';
 import About from './pages/About';
 import Footer from './components/Footer';
+import ScrollToTopButton from './components/ScrollToTopButton';
 
 function App() {
   return (
@@ -22,6 +24,7 @@ function App() {
           <Route path="/movie/:id" element={<MovieView />} />
           <Route path="/episode/:id" element={<EpisodeView />} />
           <Route path="/movies" element={<MoviesView />} />
+          <Route path="/tvshows" element={<TvShowsView />} />
           <Route path="/top-movies" element={<TopMoviesView />} />
           <Route path="/top-shows" element={<TopShowsView />} />
           <Route path="/watchlist" element={<WatchlistView />} />
@@ -30,6 +33,7 @@ function App() {
           <Route path="/about" element={<About />} />
         </Routes>
         <Footer />
+        <ScrollToTopButton />
       </div>
     </Router>
   );

@@ -28,7 +28,7 @@ const Footer: React.FC = () => {
           <a href="#" className="hover:text-white transition">Get the PowerpuffGirls App</a>
           <a href="#" className="hover:text-white transition">Help</a>
           <a href="#" className="hover:text-white transition">Site Index</a>
-          <a href="#" className="hover:text-white transition">IMDbPro</a>
+          <a href="#" className="hover:text-white transition">PowerpuffGirls</a>
           <a href="#" className="hover:text-white transition">Box Office Mojo</a>
           <a href="#" className="hover:text-white transition">PowerpuffGirls Developer</a>
         </div>
@@ -47,7 +47,7 @@ const Footer: React.FC = () => {
           <Link to="/" className="bg-[#00000] rounded-[4px] px-1.5 py-0.5 flex items-center justify-center w-[80px] h-[35px] hover:brightness-110 transition-all shrink-0">
             <img src={customLogo} alt="Logo" className="h-full w-full object-contain" />
           </Link>
-          <p>© 1990-{new Date().getFullYear()} by PowerpuffGirls.com, Inc.</p>
+          <p>© PowerpuffGirls-{new Date().getFullYear()} by PowerpuffGirls.com, Inc.</p>
         </div>
 
       </div>
