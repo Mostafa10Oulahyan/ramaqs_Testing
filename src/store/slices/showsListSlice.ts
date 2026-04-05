@@ -10,6 +10,7 @@ interface ShowsListState {
   currentPage: number;
   searchQuery: string;
   selectedGenre: string;
+  selectedType: string;
 }
 
 const initialState: ShowsListState = {
@@ -20,21 +21,75 @@ const initialState: ShowsListState = {
   currentPage: 0,
   searchQuery: '',
   selectedGenre: 'All',
+  selectedType: 'All',
 };
 
-// Fetches a generic page of ~250 shows
+// Fetches mixed content: TV shows from TVMaze and Movies from TMDB
 export const fetchShowsPage = createAsyncThunk(
   'showsList/fetchShowsPage',
   async (page: number) => {
-    const response = await fetch(`https://api.tvmaze.com/shows?page=${page}`);
-    if (!response.ok) {
-      if (response.status === 404) {
-        return []; // No more pages
+    try {
+      // 1. Fetch TV Shows from TVMaze (returns ~250 per page)
+      const tvMazeRes = await fetch(`https://api.tvmaze.com/shows?page=${page}`);
+      let tvShows: Show[] = [];
+      if (tvMazeRes.ok) {
+        const tvData = await tvMazeRes.json();
+        tvShows = (tvData as Show[]).filter(show => show.rating && show.rating.average && show.rating.average > 0);
       }
-      throw new Error('Failed to fetch shows');
+
+      // 2. Fetch Movies from TMDB (returns 20 per page)
+      // To get a comparable amount of movies, we fetch a few pages of TMDB or just use the current logic
+      // Mapping the TMDB page to our requested 'page' (batch)
+      const tmdbPage = page + 1; 
+      const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=3fd2be6f0c70a2a598f084ddfb75487c&page=${tmdbPage}`);
+      let tmdbMovies: Show[] = [];
+      if (tmdbRes.ok) {
+        const tmdbData = await tmdbRes.json();
+        if (tmdbData.results) {
+          tmdbMovies = tmdbData.results
+            .filter((m: any) => m.vote_average && m.vote_average > 0)
+            .map((m: any) => ({
+              id: m.id,
+              url: '',
+              name: m.title,
+              type: 'Movie',
+              language: m.original_language,
+              genres: ['Movie'],
+              status: 'Released',
+              runtime: 0,
+              premiered: m.release_date || '',
+              ended: '',
+              officialSite: null,
+              schedule: { time: '', days: [] },
+              rating: { average: m.vote_average },
+              weight: 0,
+              network: null,
+              webChannel: null,
+              externals: { tvrage: 0, thetvdb: 0, powerpuffgirls: '' },
+              image: { 
+                medium: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : '', 
+                original: m.poster_path ? `https://image.tmdb.org/t/p/original${m.poster_path}` : '' 
+              },
+              summary: m.overview,
+              updated: 0,
+              _links: { self: { href: '' }, previousepisode: { href: '' } },
+              isMovie: true,
+            }));
+        }
+      }
+
+      // Interleave results to provide a mixed feel
+      const maxLen = Math.max(tvShows.length, tmdbMovies.length);
+      const combined: Show[] = [];
+      for (let i = 0; i < maxLen; i++) {
+        if (i < tvShows.length) combined.push(tvShows[i]);
+        if (i < tmdbMovies.length) combined.push(tmdbMovies[i]);
+      }
+
+      return combined;
+    } catch (err) {
+      throw new Error('Failed to fetch mixed shows');
     }
-    const data = await response.json();
-    return (data as Show[]).filter(show => show.rating && show.rating.average && show.rating.average > 0);
   }
 );
 
@@ -115,6 +170,11 @@ const showsListSlice = createSlice({
     },
     setSelectedGenre: (state, action: PayloadAction<string>) => {
       state.selectedGenre = action.payload;
+      state.currentPage = 0;
+    },
+    setSelectedType: (state, action: PayloadAction<string>) => {
+      state.selectedType = action.payload;
+      state.currentPage = 0;
     }
   },
   extraReducers: (builder) => {
@@ -146,6 +206,6 @@ const showsListSlice = createSlice({
   },
 });
 
-export const { setPage, setSearchQuery, setSelectedGenre } = showsListSlice.actions;
+export const { setPage, setSearchQuery, setSelectedGenre, setSelectedType } = showsListSlice.actions;
 
 export default showsListSlice.reducer;

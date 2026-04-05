@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { fetchShowsPage, setPage, setSelectedGenre } from '../store/slices/showsListSlice';
+import { fetchShowsPage, setPage, setSelectedGenre, setSelectedType } from '../store/slices/showsListSlice';
 import Header from '../components/Header';
 import ShowCard from '../components/ShowCard';
 import Loader from '../components/Loader';
@@ -8,27 +8,42 @@ import HeroCarousel from '../components/HeroCarousel';
 
 const Home: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { shows, searchResults, status, error, currentPage, searchQuery, selectedGenre } = useAppSelector((state) => state.showsList);
+  const { shows, searchResults, status, error, currentPage, searchQuery, selectedGenre, selectedType } = useAppSelector((state) => state.showsList);
 
   useEffect(() => {
     // Determine whether to fetch page based on search logic
     if (!searchQuery) {
-      dispatch(fetchShowsPage(currentPage));
+      // Calculate which API page we need based on our 50-item view pages
+      // Since each API fetch returns ~250 shows, and we show 50 per page:
+      const apiPage = Math.floor(currentPage / 5);
+      dispatch(fetchShowsPage(apiPage));
     }
   }, [currentPage, searchQuery, dispatch]);
 
   const activeShows = searchQuery ? searchResults : shows;
 
-  // Derive genres for the filter bar
-  const allGenresStr = activeShows.map(s => s.genres || []).flat();
+  // Filter by Type first
+  const typeFilteredShows = selectedType === 'All'
+    ? activeShows
+    : selectedType === 'Movie'
+      ? activeShows.filter(s => s.isMovie)
+      : activeShows.filter(s => !s.isMovie);
+
+  // Derive genres for the filter bar (based on type filtered shows)
+  const allGenresStr = typeFilteredShows.map(s => s.genres || []).flat();
   const uniqueGenres = ['All', ...Array.from(new Set(allGenresStr))].slice(0, 10); // Limit to top genres
 
   const filteredShows = selectedGenre === 'All' 
-    ? activeShows 
-    : activeShows.filter(show => show.genres?.includes(selectedGenre));
+    ? typeFilteredShows 
+    : typeFilteredShows.filter(show => show.genres?.includes(selectedGenre));
 
-  // The grid display
-  const gridShows = filteredShows;
+  // The grid display - Limit to 50 items per logical page
+  const itemsPerPage = 50;
+  // If we are searching, we show all search results as before (usually ~20-50 anyway)
+  // If we are browsing, we slice the current buffer.
+  const gridShows = searchQuery 
+    ? filteredShows 
+    : filteredShows.slice((currentPage % 5) * itemsPerPage, ((currentPage % 5) + 1) * itemsPerPage);
 
   return (
     <div className="min-h-screen bg-black w-full text-white">
@@ -59,19 +74,42 @@ const Home: React.FC = () => {
             </div>
           )}
 
-          {/* Genre Filters */}
-          <div className="flex gap-4 text-sm font-semibold text-zinc-400 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-            {uniqueGenres.map(genre => (
-              <button 
-                key={genre}
-                onClick={() => dispatch(setSelectedGenre(genre))}
-                className={`whitespace-nowrap pb-1 border-b-2 transition-colors ${
-                  selectedGenre === genre ? 'text-white border-white' : 'border-transparent hover:text-zinc-200'
-                }`}
-              >
-                {genre}
-              </button>
-            ))}
+          {/* Type and Genre Filters */}
+          <div className="flex flex-col gap-6 mb-8">
+            {/* Type Filter */}
+            <div className="flex gap-6 text-base font-bold">
+              {['All', 'Movie', 'TV Show'].map(type => (
+                <button 
+                  key={type}
+                  onClick={() => {
+                    dispatch(setSelectedType(type));
+                    dispatch(setSelectedGenre('All')); // Reset genre when type changes
+                  }}
+                  className={`transition-all pb-2 px-1 border-b-2 ${
+                    selectedType === type ? 'text-[#f5c518] border-[#f5c518]' : 'text-zinc-500 border-transparent hover:text-white'
+                  }`}
+                >
+                  {type === 'All' ? 'All Content' : type === 'Movie' ? 'Movies' : 'TV Shows'}
+                </button>
+              ))}
+            </div>
+
+            {/* Genre Filters */}
+            <div className="flex gap-4 text-sm font-semibold text-zinc-400 overflow-x-auto pb-2 scrollbar-hide border-t border-zinc-900 pt-4">
+              {uniqueGenres.map(genre => (
+                <button 
+                  key={genre}
+                  onClick={() => dispatch(setSelectedGenre(genre))}
+                  className={`whitespace-nowrap px-4 py-1.5 rounded-full border transition-all ${
+                    selectedGenre === genre 
+                      ? 'bg-white text-black border-white' 
+                      : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white'
+                  }`}
+                >
+                  {genre}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Shows Grid */}
